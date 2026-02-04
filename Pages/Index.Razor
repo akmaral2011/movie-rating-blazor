@@ -1,0 +1,142 @@
+@page "/"
+@using MovieRatingBlazor.Models
+@using MovieRatingBlazor.Services
+@inject MovieService MovieService
+
+<div class="container">
+    <header>
+        <h1>🎬 Система Голосования</h1>
+        <p>Оцените фильмы от 1 до 5 звёзд</p>
+    </header>
+
+    <div class="movies-grid">
+        @if (movies == null || !movies.Any())
+        {
+            <p>Загрузка...</p>
+        }
+        else
+        {
+            @foreach (var movie in movies)
+            {
+                <div class="movie-card">
+                    <div class="poster-wrapper">
+                        @if (!string.IsNullOrEmpty(movie.Image))
+                        {
+                            <img src="@movie.Image" alt="@movie.Title" class="movie-poster" />
+                        }
+                        else
+                        {
+                            <div class="no-image">No image</div>
+                        }
+                    </div>
+
+                    <div class="movie-info">
+                        <h3>@movie.Title</h3>
+                        <p class="description">@movie.Description</p>
+
+                        <div class="rating-section">
+                            <div class="stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    int starIndex = i;
+                                    <span class="star @(movie.Rating >= starIndex ? "filled" : "")" 
+                                          @onclick="() => movie.Rating = starIndex"
+                                          @onmouseover="() => movie.HoverRating = starIndex"
+                                          @onmouseout="() => movie.HoverRating = 0">
+                                        ★
+                                    </span>
+                                }
+                            </div>
+                            <span class="rating-text">Ваша оценка: @movie.Rating </span>
+                        </div>
+
+                        <button class="save-btn" @onclick="() => SaveRating(movie)">
+                            Сохранить оценку
+                        </button>
+
+                        @if (movie.ShowSuccessMessage)
+                        {
+                            <div class="success-badge">✔ Сохранено!</div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<Movie> movies = new();
+
+    protected override void OnInitialized()
+    {
+
+        movies = MovieService.GetMovies();
+    }
+
+    private async Task SaveRating(Movie movie)
+    {
+
+        movie.ShowSuccessMessage = true;
+        StateHasChanged();
+
+        await Task.Delay(2000);
+        movie.ShowSuccessMessage = false;
+        StateHasChanged();
+    }
+}
+
+<style>
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+    header { text-align: center; margin-bottom: 40px; color: #fff; }
+    
+    .movies-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+        gap: 25px; 
+    }
+
+    .movie-card { 
+        background: #1e1e1e; 
+        border-radius: 15px; 
+        overflow: hidden; 
+        color: white;
+        transition: transform 0.3s;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .movie-card:hover { transform: translateY(-5px); }
+
+    .poster-wrapper { height: 400px; width: 100%; background: #333; }
+    .movie-poster { width: 100%; height: 100%; object-fit: cover; }
+
+    .movie-info { padding: 20px; }
+    .description { font-size: 0.9em; color: #ccc; min-height: 50px; }
+
+    .rating-section { margin: 15px 0; }
+    .stars { font-size: 2em; cursor: pointer; display: inline-block; }
+    .star { color: #444; transition: color 0.2s; }
+    .star.filled { color: #ffcc00; }
+    .rating-text { margin-left: 10px; color: #888; }
+
+    .save-btn {
+        width: 100%;
+        background: #e50914;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .save-btn:hover { background: #f40612; }
+
+    .success-badge {
+        margin-top: 10px;
+        color: #2ecc71;
+        text-align: center;
+        font-weight: bold;
+    }
+</style>
